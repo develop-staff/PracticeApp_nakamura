@@ -2,7 +2,7 @@
 <div class="main photo-upload">
   <%=form_tag'/photouploads',method:'post',multipart:true do%>
     <p>
-    <label>画像(.jpg)をアップロードする</label>
+    <label>画像(.jpg,.png)をアップロードする</label>
     </p>
     <%=file_field :photoupload, :file%>
     <%=submit_tag'アップロードする'%>
