@@ -1,0 +1,2 @@
+module PhotouploadsHelper
+end

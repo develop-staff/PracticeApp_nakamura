@@ -1,0 +1,25 @@
+
+<div class="main photo-upload">
+  <%=form_tag'/photouploads',method:'post',multipart:true do%>
+    <p>
+    <label>画像(.jpg)をアップロードする</label>
+    </p>
+    <%=file_field :photoupload, :file%>
+    <%=submit_tag'アップロードする'%>
+  <%end%>
+</div>
+
+
+
+
+<div class="photo-list" style="margin-top:100px">
+  <h2>画像一覧</h2>
+  <%@img_paths.each do |img_path|%>
+    <img src="<%=img_path%>">
+  <%end%>
+  <br>
+  <br>
+  <%=button_to "ランダムに並び替える",{controller: 'photouploads',action: 'index'},{method: :get,class: "btn btn-default"}%>
+</div>
+
+
