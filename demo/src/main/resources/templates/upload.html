@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>top page</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+<body>
+<h2>画像アップロード</h2>
+<form method="post" enctype="multipart/form-data" action="/upload" >
+    <input name="file" type="file" />
+    <input type="submit" value="送信する"/>
+</form>
+<h2 style="margin-top: 100px">画像一覧</h2>
+
+<img src="/tux.jpg" th:src="@{/tux.jpg}"/>
+<table>
+<tr th:each="obj:${files}">
+    <img src="${obj[0}}" th:src="@{${obj[0]}}"/>
+    <img src="${obj[1]}" th:src="@{${obj[1]}}"/>
+</tr>
+</table>
+
+</body>
+</html>
+
