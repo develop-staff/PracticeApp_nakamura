@@ -12,14 +12,11 @@
 </form>
 <h2 style="margin-top: 100px">画像一覧</h2>
 
-<img src="/tux.jpg" th:src="@{/tux.jpg}"/>
-<table>
+
 <tr th:each="obj:${files}">
-    <img src="${obj[0}}" th:src="@{${obj[0]}}"/>
-    <img src="${obj[1]}" th:src="@{${obj[1]}}"/>
+    <!--<td><img th:src="/Users/nakamura/PracticeApp_nakamura/demo/image/${obj}"/></td>-->
+    <td><img th:src="${obj}"/></td>
 </tr>
-</table>
 
 </body>
 </html>
-
