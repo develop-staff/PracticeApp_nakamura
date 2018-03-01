@@ -4,9 +4,7 @@ import com.example.demo.repositories.MyDataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -18,8 +16,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.*;
-import java.sql.Array;
-import java.sql.Blob;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -29,12 +25,14 @@ public class SampleController {
     @Autowired
     MyDataRepository repository;
 
+    String storePath="/Users/meisei/Documents/abc_app/demo_DB/target/classes/static";
 
     //インスタンス生成時に初期化されるデータ
     @PostConstruct
     public void init(){
 
-        File file_1=new File("/Users/meisei/Desktop/demo/src/main/resources/static/linux.jpg");
+        File file_1=new File(storePath+"/linux.jpg");
+        File file_2=new File(storePath+"/penguin.jpg");
 
         //ダミーデータ
         MyData d1=new MyData();
@@ -43,9 +41,14 @@ public class SampleController {
         d1.setFile(file_1);  //ここでファイル自体を保存しても、使わない…？。
         //d1.setImg();
 
-        repository.saveAndFlush(d1);
-    }
+        MyData d2=new MyData();
+        d2.setName(file_2.getName());
+        d2.setFile_path("/penguin.jpg");
+        d2.setFile(file_2);
 
+        repository.saveAndFlush(d1);
+        repository.saveAndFlush(d2);
+    }
 
 
 
@@ -59,8 +62,7 @@ public class SampleController {
             return new ModelAndView("/upload");
         }
 
-        //Path path = Paths.get("/Users/nakamura/PracticeApp_nakamura/demo/image");  TODO
-        Path path = Paths.get("/Users/meisei/Desktop/demo/src/main/resources/static");
+        Path path = Paths.get(storePath);  //TODO
         if (!Files.exists(path)) {
             try {
                 Files.createDirectory(path);
@@ -73,8 +75,7 @@ public class SampleController {
 
         String filename=uploadForm.getFile().getOriginalFilename();
         Path uploadfile = Paths
-                .get("/Users/meisei/Desktop/demo/src/main/resources/static/"+filename);
-                //.get("/Users/nakamura/PracticeApp_nakamura/demo/image/" + filename);  TODO
+                .get(storePath+"/"+filename);  //TODO
 
 
         try (OutputStream os = Files.newOutputStream(uploadfile, StandardOpenOption.CREATE)) {
