@@ -25,7 +25,7 @@ public class SampleController {
     @Autowired
     MyDataRepository repository;
 
-    String storePath="/Users/meisei/Documents/abc_app/demo_DB/target/classes/static";
+    String storePath="/Users/nakamura/PracticeApp_nakamura/demo_DB/target/classes/static";
 
     //インスタンス生成時に初期化されるデータ
     @PostConstruct
@@ -106,7 +106,7 @@ public class SampleController {
         mav.setViewName("upload");
 
         //DBに保存されているファイルのパスを取得
-        Iterable<MyData>list=repository.findAll();
+        //Iterable<MyData>list=repository.findAll();
         ArrayList<MyData>ls=new ArrayList<>(repository.findAll());
 
         Collections.shuffle(ls);
