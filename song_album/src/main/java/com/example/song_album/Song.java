@@ -14,9 +14,6 @@ public class Song {
     private long id;
 
     @Column(nullable = true)
-    private File file;
-
-    @Column(nullable = true)
     private String file_name;
 
     @Column(nullable = true)
@@ -29,14 +26,6 @@ public class Song {
 
     public void setId(long id) {
         this.id = id;
-    }
-
-    public File getFile() {
-        return file;
-    }
-
-    public void setFile(File file) {
-        this.file = file;
     }
 
     public String getFile_name() {
