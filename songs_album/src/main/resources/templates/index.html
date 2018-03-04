@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>top page</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+<body>
+<tr th:each="obj:${files}">
+    <td th:text="${obj.file_name}"></td>
+</tr>
+
+<form method="get" action="http://localhost:8080/">
+    <button>現在の曲を再生する</button>
+</form>
+<form method="get" action="http://localhost:8080/">
+    <button>曲をシャッフルする</button>
+</form>
+
+<table>
+<tr th:each="obj:${songs}">
+    <td th:text="${obj.file_name}"></td>
+</tr>
+</table>
+
+</body>
+</html>
