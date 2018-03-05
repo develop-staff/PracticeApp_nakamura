@@ -76,6 +76,15 @@ public class SongController implements ShuffleEngine{
         return "redirect:/";
     }
 
+    //現状、selectedSongIndexが５以上になった際のエラー対処をしていない
+    @RequestMapping(path = "/play/next",method = RequestMethod.GET)
+    String playNextSong(RedirectAttributes attributes){
+        getNextSong();
+        String _selectedSongName=songs[selectedSongIndex].getFile_name();
+        attributes.addFlashAttribute("selectedSong",_selectedSongName);
+        return "redirect:/";
+    }
+
 
     //シャッフル対象の曲(Song)の配列をインスタンス(何の？)に設定
     //再生する５曲というよりは、対象となる曲全体のことを指すはず。
