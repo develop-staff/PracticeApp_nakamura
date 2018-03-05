@@ -32,6 +32,7 @@ public class SongController implements ShuffleEngine{
 
     //表示されている５つの曲の配列
     Song[]songs=new Song[5];
+    Song[] presentSongsList=new Song[5];
 
     @PostConstruct
     //ダミーデータ(10個)の作成
@@ -44,9 +45,11 @@ public class SongController implements ShuffleEngine{
             song[i]=new Song();
             song[i].setFile_name(file[i].getName());
             song[i].setFile_path("song_"+(i)+".mp3");
-
+            presentSongsList=peekQueue();
             repository.saveAndFlush(song[i]);
         }
+
+        songs=peekQueue();
     }
 
     //TODO
@@ -54,33 +57,42 @@ public class SongController implements ShuffleEngine{
     ModelAndView index(ModelAndView mav){
         mav.setViewName("index");
         setSongs(repository.findAll().toArray(new Song[repository.findAll().size()]));
-        mav.addObject("files",this.songsList);
+        //mav.addObject("files",this.songsList);
         //mav.addObject("songs",peekQueue());
-
-        songs=peekQueue();
+        mav.addObject("songs",presentSongsList);
         return mav;
     }
 
 
+    //たぶんシャッフルされて並んでいる５つの曲を表示するという処理も、index()に書いた方がよさそう。
     @RequestMapping(path = "/shuffle",method = RequestMethod.GET)
     String shuffleSongs(RedirectAttributes attributes){
-        attributes.addFlashAttribute("songs",peekQueue());
+        selectedSongIndex=0;
+        presentSongsList=peekQueue();
+        attributes.addFlashAttribute("songs",presentSongsList);
         return "redirect:/";
     }
 
 
+    //音楽再生とか、次の曲再生の時にランダムに変わるのは、redirect:/でそこからまたindexが呼ばれるからだろう。
+    //再生するのを表示する処理は、index()に書いた方がよいかも
+    //ここはあくまで、曲の指定するのみがよい？
     @RequestMapping(path = "/play",method = RequestMethod.GET)
     String playSong(RedirectAttributes attributes){
-        String _selectedSongName=songs[selectedSongIndex].getFile_name();
+        String _selectedSongName=presentSongsList[selectedSongIndex].getFile_name();
         attributes.addFlashAttribute("selectedSong",_selectedSongName);
         return "redirect:/";
     }
 
     //現状、selectedSongIndexが５以上になった際のエラー対処をしていない
+    //selectedSongIndexは、ランダム処理する度に初期化される必要がある。
     @RequestMapping(path = "/play/next",method = RequestMethod.GET)
     String playNextSong(RedirectAttributes attributes){
         getNextSong();
-        String _selectedSongName=songs[selectedSongIndex].getFile_name();
+        if(selectedSongIndex>=5)  //５つ目まで再生したら、初めの曲に戻る。
+            selectedSongIndex=0;
+        
+        String _selectedSongName=presentSongsList[selectedSongIndex].getFile_name();
         attributes.addFlashAttribute("selectedSong",_selectedSongName);
         return "redirect:/";
     }
