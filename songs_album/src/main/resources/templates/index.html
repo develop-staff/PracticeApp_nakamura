@@ -5,14 +5,18 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 </head>
 <body>
+
+
+<p th:text="|現在再生中の曲: ${selectedSong}|"></p>
+
 <tr th:each="obj:${files}">
     <td th:text="${obj.file_name}"></td>
 </tr>
 
-<form method="get" action="http://localhost:8080/">
+<form method="get" action="http://localhost:8080/play">
     <button>現在の曲を再生する</button>
 </form>
-<form method="get" action="http://localhost:8080/">
+<form method="get" action="http://localhost:8080/shuffle">
     <button>曲をシャッフルする</button>
 </form>
 

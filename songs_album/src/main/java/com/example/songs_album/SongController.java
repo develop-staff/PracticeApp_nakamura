@@ -28,11 +28,10 @@ public class SongController implements ShuffleEngine{
     String storePath="/Users/meisei/Documents/abc_app/songs_album/target/classes/static";
 
     //表示されている５つの曲のうち、何番目か
-    int playCount=0;
+    int selectedSongIndex=0;
 
     //表示されている５つの曲の配列
     Song[]songs=new Song[5];
-
 
     @PostConstruct
     //ダミーデータ(10個)の作成
@@ -56,23 +55,26 @@ public class SongController implements ShuffleEngine{
         mav.setViewName("index");
         setSongs(repository.findAll().toArray(new Song[repository.findAll().size()]));
         mav.addObject("files",this.songsList);
-        mav.addObject("songs",peekQueue());
+        //mav.addObject("songs",peekQueue());
 
+        songs=peekQueue();
         return mav;
     }
 
 
     @RequestMapping(path = "/shuffle",method = RequestMethod.GET)
-    String shuffleSongs(Model model){
-        model.addAttribute("songs",peekQueue());
+    String shuffleSongs(RedirectAttributes attributes){
+        attributes.addFlashAttribute("songs",peekQueue());
         return "redirect:/";
     }
 
-//    @RequestMapping(path = "/play",method = RequestMethod.GET)
-//    ModelAndView playSong(ModelAndView mav){
-//
-//    }
 
+    @RequestMapping(path = "/play",method = RequestMethod.GET)
+    String playSong(RedirectAttributes attributes){
+        String _selectedSongName=songs[selectedSongIndex].getFile_name();
+        attributes.addFlashAttribute("selectedSong",_selectedSongName);
+        return "redirect:/";
+    }
 
 
     //シャッフル対象の曲(Song)の配列をインスタンス(何の？)に設定
@@ -89,8 +91,8 @@ public class SongController implements ShuffleEngine{
     //次に再生する曲(Song)を返す。次に返す曲が更新される。再生ボタン押されたとき(playSong()の中で？)呼ばれる。
     public Song getNextSong(){
 
-        Song nextSong= songsList.get(playCount+1);
-        playCount++;
+        Song nextSong= songsList.get(selectedSongIndex+1);
+        selectedSongIndex++;
 
         return nextSong;
     }
