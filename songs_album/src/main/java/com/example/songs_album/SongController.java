@@ -12,7 +12,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import javax.annotation.PostConstruct;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 import static java.lang.Float.min;
 
@@ -22,8 +24,8 @@ public class SongController implements ShuffleEngine{
     @Autowired
     SongRepository repository;
 
-    //全体の
-    ArrayList<Song>songsList=new ArrayList<>();
+    //サーバーに保存されている曲全体
+    ArrayList<Song>storedSongs=new ArrayList<>();
 
     String storePath="/Users/meisei/Documents/abc_app/songs_album/target/classes/static";
 
@@ -31,9 +33,9 @@ public class SongController implements ShuffleEngine{
     int selectedSongIndex=0;
 
     //表示されている５つの曲の配列
-    //Song[]songs=new Song[5];
     Song[] presentSongsList=new Song[5];
     Song[] nextSongsList=new Song[5];
+
 
     String _selectedSongName;
 
@@ -51,11 +53,8 @@ public class SongController implements ShuffleEngine{
             repository.saveAndFlush(song[i]);
         }
         //TODO
-        //setSongs書き換えるので、ここも変えねばならない
-        setSongs(repository.findAll().toArray(new Song[repository.findAll().size()]));
-        //setSongs(peekQueue());
 
-        presentSongsList=peekQueue();
+        setSongs(peekQueue());
     }
 
 
@@ -64,12 +63,9 @@ public class SongController implements ShuffleEngine{
     @RequestMapping(path = "/",method = RequestMethod.GET)
     ModelAndView index(ModelAndView mav){
         mav.setViewName("index");
-        setSongs(repository.findAll().toArray(new Song[repository.findAll().size()]));
-        //setSongs(peekQueue();
 
         _selectedSongName=presentSongsList[selectedSongIndex].getFile_name();
         mav.addObject("selectedSong",_selectedSongName);
-
         mav.addObject("songs",presentSongsList);
 
         return mav;
@@ -77,9 +73,9 @@ public class SongController implements ShuffleEngine{
 
 
 
-    //たぶんシャッフルされて並んでいる５つの曲を表示するという処理も、index()に書いた方がよさそう。
     @RequestMapping(path = "/shuffle",method = RequestMethod.GET)
     String shuffleSongs(RedirectAttributes attributes){
+
         selectedSongIndex=0;
         presentSongsList=peekQueue();
         attributes.addFlashAttribute("songs",presentSongsList);
@@ -87,73 +83,49 @@ public class SongController implements ShuffleEngine{
     }
 
 
-    //音楽再生とか、次の曲再生の時にランダムに変わるのは、redirect:/でそこからまたindexが呼ばれるからだろう。
-    //再生するのを表示する処理は、index()に書いた方がよいかも
-    //ここはあくまで、曲の指定するのみがよい？
-    //TODO
-    //現在、「シャッフルボタン」を押さないで「再生」ボタンを押すとエラーが生じる
-    //「シャッフルボタン」で何を初期化しているか注意！
-    //TODO
-    //初めの段階で、現在の曲がnullなのは、ボタンを押さないとselectedSongに値が入らない書き方だから。
+    //曲の指定するメソッド。再生中の曲を表示する処理は、index()メソッドに記述。
     @RequestMapping(path = "/play",method = RequestMethod.GET)
     String playSong(RedirectAttributes attributes){
-        _selectedSongName=presentSongsList[selectedSongIndex].getFile_name();
-        attributes.addFlashAttribute("selectedSong",_selectedSongName);
+        selectedSongIndex=selectedSongIndex;
+
         return "redirect:/";
     }
 
-    //selectedSongIndexは、ランダム処理する度に初期化される必要がある。
     @RequestMapping(path = "/play/next",method = RequestMethod.GET)
     String playNextSong(RedirectAttributes attributes){
         getNextSong();
-        if(selectedSongIndex>=5)  //５つ目まで再生したら、初めの曲に戻る。
-            selectedSongIndex=0;
+        selectedSongIndex=(selectedSongIndex%5);
 
-        String _selectedSongName=presentSongsList[selectedSongIndex].getFile_name();
-        attributes.addFlashAttribute("selectedSong",_selectedSongName);
         return "redirect:/";
     }
 
 
-    //TODO
     //ランダム処理で選ばれる５個の曲を設定する
-    //↓ここもうちょっと綺麗にかける
-    //呼び出し側で、setSongs(repository.findAll().toArray(new Song[repository.findAll().size()]));
-    public void setSongs(Song[] songs){  //引数には、「シャッフル対象の曲」(たぶんrepository.findAll())
-        this.songsList.clear();
-        Collections.addAll(this.songsList,songs);  //これ単体だと、呼び出されるたびにsongsListに(前の情報を残したまま)「追加」され続けてしまう。
+    public void setSongs(Song[] songs){
+        presentSongsList=songs;
     }
-
-    //TODO
-    //設定する値、あるいは設定先(presentSongsList)を見直す必要あり
-//    public void setSongs(Song[]songs){
-//        this.presentSongsList=songs;
-//    }
-
 
 
     //次に再生する曲(Song)を返す。次に返す曲が更新される。再生ボタン押されたとき(playSong()の中で？)呼ばれる。
     public Song getNextSong(){
-
-        Song nextSong= songsList.get(selectedSongIndex+1);
+        Song nextSong=presentSongsList[selectedSongIndex];
         selectedSongIndex++;
 
         return nextSong;
     }
 
-
     //次に再生する予定の曲を先読み(PEEKMAXを上限)して配列として返す。
     public Song[]peekQueue(){
 
-        Collections.shuffle(songsList);
+        storedSongs.clear();
+        Collections.addAll(this.storedSongs,repository.findAll().toArray(new Song[repository.findAll().size()]));
 
-        ArrayList<Song>queueList=new ArrayList<>();
-        for(int i=0;i<min(songsList.size(),PEEKMAX);i++){
-            queueList.add(songsList.get(i));
+        Collections.shuffle(storedSongs);
+
+        Song[]queueArray=new Song[5];
+        for(int i=0;i<min(storedSongs.size(),PEEKMAX);i++){
+            queueArray[i]=storedSongs.get(i);
         }
-
-        Song[]queueArray=queueList.toArray(new Song[queueList.size()]);
-
         return queueArray;
     }
 }
