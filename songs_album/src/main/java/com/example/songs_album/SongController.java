@@ -24,19 +24,20 @@ public class SongController implements ShuffleEngine{
     @Autowired
     SongRepository repository;
 
+    String storePath="/Users/meisei/Documents/abc_app/songs_album/target/classes/static";
+
     //サーバーに保存されている曲全体
     ArrayList<Song>storedSongs=new ArrayList<>();
 
-    String storePath="/Users/meisei/Documents/abc_app/songs_album/target/classes/static";
-
-    //表示されている５つの曲のうち、何番目か
+    //５つの曲のうち、何番目を選択しているか
     int selectedSongIndex=0;
 
-    //表示されている５つの曲の配列
+    //現在表示される５つの曲の配列
     Song[] presentSongsList=new Song[5];
+    //次巡で表示される５つの曲の配列
     Song[] nextSongsList=new Song[5];
 
-
+    //選択されている曲の名前
     String _selectedSongName;
 
     @PostConstruct
@@ -52,14 +53,13 @@ public class SongController implements ShuffleEngine{
             song[i].setFile_path("song_"+(i)+".mp3");
             repository.saveAndFlush(song[i]);
         }
-        //TODO
 
+        //TODO
         setSongs(peekQueue());
+        //setSongs(nextSongsList);
     }
 
 
-
-    //TODO
     @RequestMapping(path = "/",method = RequestMethod.GET)
     ModelAndView index(ModelAndView mav){
         mav.setViewName("index");
@@ -72,12 +72,12 @@ public class SongController implements ShuffleEngine{
     }
 
 
-
     @RequestMapping(path = "/shuffle",method = RequestMethod.GET)
     String shuffleSongs(RedirectAttributes attributes){
 
         selectedSongIndex=0;
-        presentSongsList=peekQueue();
+        setSongs(nextSongsList);
+        //setSongs(peekQueue());
         attributes.addFlashAttribute("songs",presentSongsList);
         return "redirect:/";
     }
@@ -103,6 +103,11 @@ public class SongController implements ShuffleEngine{
     //ランダム処理で選ばれる５個の曲を設定する
     public void setSongs(Song[] songs){
         presentSongsList=songs;
+
+        //現在の曲リストと次巡の曲リストが異なるように設定
+        do{
+            nextSongsList=peekQueue();
+        }while (presentSongsList==nextSongsList);
     }
 
 
