@@ -45,25 +45,26 @@ public class SongController implements ShuffleEngine{
     //選択されている曲の名前
     String _selectedSongName;
 
+    int storedSongsNum;
+
 
     @PostConstruct
     //ダミーデータ(10個)の作成
     public void init(){
 
-        File file[]=new File[10];
-        Song song[]=new Song[10];
-
-
-        //これで取得したのを、リポジトリに保存したい
-        ArrayList<String> songs_name=new ArrayList<>();
+        ArrayList<String> storedSongNames=new ArrayList<>();
 
         File store_dir=new File(storePath);
         File[]storedFiles=store_dir.listFiles();
+        storedSongsNum=storedFiles.length;
+
+        File file[]=new File[storedSongsNum];
+        Song song[]=new Song[storedSongsNum];
 
         for(int i=0;i<storedFiles.length;i++){
-            songs_name.add(new File(storePath+storedFiles[i]).getName());
+            storedSongNames.add(new File(storePath+storedFiles[i]).getName());
 
-            file[i]=new File(storePath+songs_name.get(i));
+            file[i]=new File(storePath+storedSongNames.get(i));
             song[i]=new Song();
             song[i].setFile_name(file[i].getName());
             song[i].setFile_path(file[i].getName());
@@ -108,7 +109,7 @@ public class SongController implements ShuffleEngine{
     @RequestMapping(path = "/play/next",method = RequestMethod.GET)
     String playNextSong(RedirectAttributes attributes){
         getNextSong();
-        selectedSongIndex=(selectedSongIndex%5);
+        selectedSongIndex= (int) (selectedSongIndex%min(storedSongs.size(),PEEKMAX));
 
         return "redirect:/";
     }
@@ -147,7 +148,9 @@ public class SongController implements ShuffleEngine{
 
         Collections.shuffle(storedSongs);
 
-        Song[]queueArray=new Song[5];
+        //TODO
+        int num= (int) min(storedSongsNum,PEEKMAX);
+        Song[]queueArray=new Song[num];
         for(int i=0;i<min(storedSongs.size(),PEEKMAX);i++){
             queueArray[i]=storedSongs.get(i);
         }
@@ -190,10 +193,15 @@ public class SongController implements ShuffleEngine{
             System.err.println(ex);
         }
 
-        File file=new File(path+"/"+filename);
 
-        mydata.setFile_path("/"+filename);  //ここでファイルへのパスをレポジトリに保存する
+        mydata.setFile_path("/"+filename);
         mydata.setFile_name(filename);
+
+        //保存される曲の数が１増える
+        storedSongsNum++;
+
+        //TODO
+        //nextSongsList=peekQueue();
 
         repository.saveAndFlush(mydata);
 
