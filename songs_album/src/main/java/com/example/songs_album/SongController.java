@@ -3,14 +3,21 @@ package com.example.songs_album;
 import com.example.songs_album.repositories.SongRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.annotation.PostConstruct;
+import javax.validation.Valid;
 import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -133,4 +140,59 @@ public class SongController implements ShuffleEngine{
         }
         return queueArray;
     }
+
+
+
+
+
+
+    //この段階で、ファイルへのパスをデータベースに保存してやる
+    //ファイルをアップロードするメソッド
+    @RequestMapping(path = "/upload", method = RequestMethod.POST)
+    @Transactional(readOnly = false)
+    ModelAndView upload(@ModelAttribute @Valid Song mydata, BindingResult result, UploadForm uploadForm) {
+
+        if (uploadForm.getFile().isEmpty()) {
+            return new ModelAndView("/");
+        }
+
+        Path path = Paths.get(storePath);  //TODO
+        if (!Files.exists(path)) {
+            try {
+                Files.createDirectory(path);
+            } catch (NoSuchFileException ex) {
+                System.err.println(ex);
+            } catch (IOException ex) {
+                System.err.println(ex);
+            }
+        }
+
+        String filename=uploadForm.getFile().getOriginalFilename();
+        Path uploadfile = Paths
+                .get(storePath+"/"+filename);  //TODO
+
+
+        try (OutputStream os = Files.newOutputStream(uploadfile, StandardOpenOption.CREATE)) {
+            byte[] bytes = uploadForm.getFile().getBytes();
+
+            os.write(bytes);
+            os.close();
+        } catch (IOException ex) {
+            System.err.println(ex);
+        }
+
+        File file=new File(path+"/"+filename);
+
+        mydata.setFile_path("/"+filename);  //ここでファイルへのパスをレポジトリに保存する
+        mydata.setFile_name(filename);
+
+        repository.saveAndFlush(mydata);
+
+        return new ModelAndView("redirect:/");
+    }
+
+
+
+
+
 }

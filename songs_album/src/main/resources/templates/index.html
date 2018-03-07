@@ -6,6 +6,12 @@
 </head>
 <body>
 
+<h2>Songs_album</h2>
+<form method="post" enctype="multipart/form-data" action="/upload" >
+    <input name="file" type="file" />
+    <input type="submit" value="アップロードする"/>
+</form>
+
 
 <p th:text="|現在再生中の曲: ${selectedSong}|"></p>
 
