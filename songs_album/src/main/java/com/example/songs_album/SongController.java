@@ -4,7 +4,6 @@ import com.example.songs_album.repositories.SongRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,14 +13,13 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.annotation.PostConstruct;
 import javax.validation.Valid;
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 
 import static java.lang.Float.min;
 
@@ -31,7 +29,7 @@ public class SongController implements ShuffleEngine{
     @Autowired
     SongRepository repository;
 
-    String storePath="/Users/meisei/Documents/abc_app/songs_album/target/classes/static";
+    String storePath="/Users/meisei/Documents/abc_app/songs_album/target/classes/static/";
 
     //サーバーに保存されている曲全体
     ArrayList<Song>storedSongs=new ArrayList<>();
@@ -47,24 +45,34 @@ public class SongController implements ShuffleEngine{
     //選択されている曲の名前
     String _selectedSongName;
 
+
     @PostConstruct
     //ダミーデータ(10個)の作成
     public void init(){
 
         File file[]=new File[10];
         Song song[]=new Song[10];
-        for(int i=0;i<10;i++){
-            file[i]=new File(storePath+"/song_"+(i)+".mp3");
+
+
+        //これで取得したのを、リポジトリに保存したい
+        ArrayList<String> songs_name=new ArrayList<>();
+
+        File store_dir=new File(storePath);
+        File[]storedFiles=store_dir.listFiles();
+
+        for(int i=0;i<storedFiles.length;i++){
+            songs_name.add(new File(storePath+storedFiles[i]).getName());
+
+            file[i]=new File(storePath+songs_name.get(i));
             song[i]=new Song();
             song[i].setFile_name(file[i].getName());
-            song[i].setFile_path("song_"+(i)+".mp3");
+            song[i].setFile_path(file[i].getName());
             repository.saveAndFlush(song[i]);
         }
 
-        //TODO
         setSongs(peekQueue());
-        //setSongs(nextSongsList);
     }
+
 
 
     @RequestMapping(path = "/",method = RequestMethod.GET)
@@ -84,13 +92,12 @@ public class SongController implements ShuffleEngine{
 
         selectedSongIndex=0;
         setSongs(nextSongsList);
-        //setSongs(peekQueue());
         attributes.addFlashAttribute("songs",presentSongsList);
         return "redirect:/";
     }
 
 
-    //曲の指定するメソッド。再生中の曲を表示する処理は、index()メソッドに記述。
+    //曲を指定するメソッド。再生中の曲を表示する処理は、index()メソッドに記述。
     @RequestMapping(path = "/play",method = RequestMethod.GET)
     String playSong(RedirectAttributes attributes){
         selectedSongIndex=selectedSongIndex;
@@ -112,9 +119,15 @@ public class SongController implements ShuffleEngine{
         presentSongsList=songs;
 
         //現在の曲リストと次巡の曲リストが異なるように設定
-        do{
+        //曲が１つしかない場合は、次巡の曲に単にpeekQueue()を設定するだけ
+        if(storedSongs.size()!=1) {
+            do {
+                nextSongsList = peekQueue();
+            } while (presentSongsList == nextSongsList);
+        }
+        else {
             nextSongsList=peekQueue();
-        }while (presentSongsList==nextSongsList);
+        }
     }
 
 
@@ -144,9 +157,6 @@ public class SongController implements ShuffleEngine{
 
 
 
-
-
-    //この段階で、ファイルへのパスをデータベースに保存してやる
     //ファイルをアップロードするメソッド
     @RequestMapping(path = "/upload", method = RequestMethod.POST)
     @Transactional(readOnly = false)
@@ -166,10 +176,9 @@ public class SongController implements ShuffleEngine{
                 System.err.println(ex);
             }
         }
-
         String filename=uploadForm.getFile().getOriginalFilename();
         Path uploadfile = Paths
-                .get(storePath+"/"+filename);  //TODO
+                .get(storePath+filename);  //TODO
 
 
         try (OutputStream os = Files.newOutputStream(uploadfile, StandardOpenOption.CREATE)) {
@@ -190,9 +199,4 @@ public class SongController implements ShuffleEngine{
 
         return new ModelAndView("redirect:/");
     }
-
-
-
-
-
 }
