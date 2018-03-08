@@ -37,15 +37,17 @@ public class SongController implements ShuffleEngine{
     //５つの曲のうち、何番目を選択しているか
     int selectedSongIndex=0;
 
+    //現在選択されている曲
+    Song selectedSong;
+
     //現在表示される５つの曲の配列
     Song[] presentSongsList=new Song[5];
     //次巡で表示される５つの曲の配列
     Song[] nextSongsList=new Song[5];
 
-    //選択されている曲の名前
-    String _selectedSongName;
-
     int storedSongsNum;
+
+
 
 
     @PostConstruct
@@ -72,6 +74,9 @@ public class SongController implements ShuffleEngine{
         }
 
         setSongs(peekQueue());
+
+        //シャッフルメソッドでも以下の処理をする
+        selectedSong=presentSongsList[selectedSongIndex];
     }
 
 
@@ -80,8 +85,9 @@ public class SongController implements ShuffleEngine{
     ModelAndView index(ModelAndView mav){
         mav.setViewName("index");
 
-        _selectedSongName=presentSongsList[selectedSongIndex].getFile_name();
-        mav.addObject("selectedSong",_selectedSongName);
+        //selectedSong=presentSongsList[selectedSongIndex];
+
+        mav.addObject("presentSong",selectedSong);
         mav.addObject("songs",presentSongsList);
 
         return mav;
@@ -92,7 +98,9 @@ public class SongController implements ShuffleEngine{
     String shuffleSongs(RedirectAttributes attributes){
 
         selectedSongIndex=0;
+
         setSongs(nextSongsList);
+        selectedSong=presentSongsList[selectedSongIndex];
         attributes.addFlashAttribute("songs",presentSongsList);
         return "redirect:/";
     }
@@ -101,15 +109,13 @@ public class SongController implements ShuffleEngine{
     //曲を指定するメソッド。再生中の曲を表示する処理は、index()メソッドに記述。
     @RequestMapping(path = "/play",method = RequestMethod.GET)
     String playSong(RedirectAttributes attributes){
-        selectedSongIndex=selectedSongIndex;
-
+        selectedSong=presentSongsList[selectedSongIndex];
         return "redirect:/";
     }
 
     @RequestMapping(path = "/play/next",method = RequestMethod.GET)
     String playNextSong(RedirectAttributes attributes){
-        getNextSong();
-        selectedSongIndex= (int) (selectedSongIndex%min(storedSongs.size(),PEEKMAX));
+        selectedSong=getNextSong();
 
         return "redirect:/";
     }
@@ -132,12 +138,13 @@ public class SongController implements ShuffleEngine{
     }
 
 
-    //次に再生する曲(Song)を返す。次に返す曲が更新される。再生ボタン押されたとき(playSong()の中で？)呼ばれる。
+    //次に再生する曲(Song)を返す。
     public Song getNextSong(){
-        Song nextSong=presentSongsList[selectedSongIndex];
-        selectedSongIndex++;
 
-        return nextSong;
+        selectedSongIndex++;
+        selectedSongIndex= (int) (selectedSongIndex%min(storedSongs.size(),PEEKMAX));
+
+        return presentSongsList[selectedSongIndex];
     }
 
     //次に再生する予定の曲を先読み(PEEKMAXを上限)して配列として返す。
@@ -154,6 +161,7 @@ public class SongController implements ShuffleEngine{
         for(int i=0;i<min(storedSongs.size(),PEEKMAX);i++){
             queueArray[i]=storedSongs.get(i);
         }
+
         return queueArray;
     }
 
@@ -169,7 +177,7 @@ public class SongController implements ShuffleEngine{
             return new ModelAndView("/");
         }
 
-        Path path = Paths.get(storePath);  //TODO
+        Path path = Paths.get(storePath);
         if (!Files.exists(path)) {
             try {
                 Files.createDirectory(path);
@@ -181,7 +189,7 @@ public class SongController implements ShuffleEngine{
         }
         String filename=uploadForm.getFile().getOriginalFilename();
         Path uploadfile = Paths
-                .get(storePath+filename);  //TODO
+                .get(storePath+filename);
 
 
         try (OutputStream os = Files.newOutputStream(uploadfile, StandardOpenOption.CREATE)) {

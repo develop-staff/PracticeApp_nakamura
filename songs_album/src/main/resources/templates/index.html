@@ -28,7 +28,7 @@
 </div>
 
 <div class="play-box">
-<p th:text="|現在再生中の曲: ${selectedSong}|"></p>
+    <p th:text="|現在再生中の曲: ${presentSong.file_name}|"></p>
 
     <div class="play-button">
         <form method="get" action="http://localhost:8080/play">
