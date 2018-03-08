@@ -200,10 +200,11 @@ public class SongController implements ShuffleEngine{
         //保存される曲の数が１増える
         storedSongsNum++;
 
-        //TODO
-        //nextSongsList=peekQueue();
-
         repository.saveAndFlush(mydata);
+
+        //アップロード前に保存されたnextSongsListは、現在のアップロードの影響を受けないため、
+        //nextSongsListを更新する必要がある。
+        nextSongsList=peekQueue();
 
         return new ModelAndView("redirect:/");
     }
