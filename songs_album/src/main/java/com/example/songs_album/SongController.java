@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 
 import static java.lang.Float.min;
@@ -29,7 +30,7 @@ public class SongController implements ShuffleEngine{
     @Autowired
     SongRepository repository;
 
-    String storePath="/Users/meisei/Documents/abc_app/songs_album/target/classes/static/";
+    String storePath="/Users/nakamura/PracticeApp_nakamura/songs_album/target/classes/static/";
 
     //サーバーに保存されている曲全体
     ArrayList<Song>storedSongs=new ArrayList<>();
@@ -73,6 +74,7 @@ public class SongController implements ShuffleEngine{
             repository.saveAndFlush(song[i]);
         }
 
+        storedSongs=new ArrayList<>(repository.findAll());
         setSongs(peekQueue());
 
         //シャッフルメソッドでも以下の処理をする
@@ -84,8 +86,6 @@ public class SongController implements ShuffleEngine{
     @RequestMapping(path = "/",method = RequestMethod.GET)
     ModelAndView index(ModelAndView mav){
         mav.setViewName("index");
-
-        //selectedSong=presentSongsList[selectedSongIndex];
 
         mav.addObject("presentSong",selectedSong);
         mav.addObject("songs",presentSongsList);
@@ -130,7 +130,7 @@ public class SongController implements ShuffleEngine{
         if(storedSongs.size()!=1) {
             do {
                 nextSongsList = peekQueue();
-            } while (presentSongsList == nextSongsList);
+            } while (Arrays.equals(presentSongsList,nextSongsList));
         }
         else {
             nextSongsList=peekQueue();
@@ -138,11 +138,12 @@ public class SongController implements ShuffleEngine{
     }
 
 
+
     //次に再生する曲(Song)を返す。
     public Song getNextSong(){
 
         selectedSongIndex++;
-        selectedSongIndex= (int) (selectedSongIndex%min(storedSongs.size(),PEEKMAX));
+        selectedSongIndex= (int) (selectedSongIndex%min(storedSongs.size(),presentSongsList.length));
 
         return presentSongsList[selectedSongIndex];
     }
@@ -150,13 +151,10 @@ public class SongController implements ShuffleEngine{
     //次に再生する予定の曲を先読み(PEEKMAXを上限)して配列として返す。
     public Song[]peekQueue(){
 
-        storedSongs.clear();
-        Collections.addAll(this.storedSongs,repository.findAll().toArray(new Song[repository.findAll().size()]));
-
         Collections.shuffle(storedSongs);
 
-        //TODO
-        int num= (int) min(storedSongsNum,PEEKMAX);
+        //TODO storedSongsNum
+        int num= (int) min(storedSongs.size(),PEEKMAX);
         Song[]queueArray=new Song[num];
         for(int i=0;i<min(storedSongs.size(),PEEKMAX);i++){
             queueArray[i]=storedSongs.get(i);
@@ -205,14 +203,13 @@ public class SongController implements ShuffleEngine{
         mydata.setFile_path("/"+filename);
         mydata.setFile_name(filename);
 
-        //保存される曲の数が１増える
-        storedSongsNum++;
-
         repository.saveAndFlush(mydata);
+        storedSongs.add(mydata);
 
         //アップロード前に保存されたnextSongsListは、現在のアップロードの影響を受けないため、
         //nextSongsListを更新する必要がある。
         nextSongsList=peekQueue();
+
 
         return new ModelAndView("redirect:/");
     }
