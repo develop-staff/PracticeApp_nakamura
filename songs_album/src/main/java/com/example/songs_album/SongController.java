@@ -84,7 +84,11 @@ public class SongController implements ShuffleEngine{
     }
 
 
-
+    /**
+     *
+     * @param mav
+     * @return
+     */
     @RequestMapping(path = "/",method = RequestMethod.GET)
     ModelAndView index(ModelAndView mav){
         mav.setViewName("index");
@@ -95,15 +99,17 @@ public class SongController implements ShuffleEngine{
         return mav;
     }
 
-
+    /**
+     * @param attributes
+     * @return
+     */
     @RequestMapping(path = "/shuffle",method = RequestMethod.GET)
     String shuffleSongs(RedirectAttributes attributes){
 
         selectedSongIndex=0;
 
         setSongs(nextSongsArray);
-        selectedSong=presentSongsArray[selectedSongIndex];
-        attributes.addFlashAttribute("songs",presentSongsArray);
+        selectedSong=presentSongsArray[selectedSongIndex];  //現在の曲配列の０番目を指定
         return "redirect:/";
     }
 
@@ -126,10 +132,18 @@ public class SongController implements ShuffleEngine{
     //ランダム処理で選ばれる５個の曲を設定する
     public void setSongs(Song[] songs){
         presentSongsArray=songs;
+        Song presentLastSong=presentSongsArray[presentSongsArray.length-1];
+        Song nextFirstSong;
 
         //現在の曲リストと次巡の曲リストが異なるように設定
         //曲が１つしかない場合は、次巡の曲に単にpeekQueue()を設定するだけ
-        if(storedSongs.size()!= 1) {
+        if(storedSongs.size()>2) {
+            do {
+                nextSongsArray = peekQueue();
+                nextFirstSong=nextSongsArray[0];
+            } while (Arrays.equals(presentSongsArray,nextSongsArray)||presentLastSong==nextFirstSong);
+        }
+        else if(storedSongs.size()>1){
             do {
                 nextSongsArray = peekQueue();
             } while (Arrays.equals(presentSongsArray,nextSongsArray));
