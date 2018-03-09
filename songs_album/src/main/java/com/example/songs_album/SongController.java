@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
+import static java.lang.Float.intBitsToFloat;
 import static java.lang.Float.min;
 
 @Controller
@@ -42,11 +43,11 @@ public class SongController implements ShuffleEngine{
     Song selectedSong;
 
     //現在表示される５つの曲の配列
-    Song[] presentSongsList=new Song[5];
+    Song[] presentSongsArray=new Song[5];
     //次巡で表示される５つの曲の配列
-    Song[] nextSongsList=new Song[5];
+    Song[] nextSongsArray=new Song[5];
 
-    int storedSongsNum;
+
 
 
 
@@ -59,7 +60,8 @@ public class SongController implements ShuffleEngine{
 
         File store_dir=new File(storePath);
         File[]storedFiles=store_dir.listFiles();
-        storedSongsNum=storedFiles.length;
+
+        int storedSongsNum=storedFiles.length;
 
         File file[]=new File[storedSongsNum];
         Song song[]=new Song[storedSongsNum];
@@ -78,7 +80,7 @@ public class SongController implements ShuffleEngine{
         setSongs(peekQueue());
 
         //シャッフルメソッドでも以下の処理をする
-        selectedSong=presentSongsList[selectedSongIndex];
+        selectedSong=presentSongsArray[selectedSongIndex];
     }
 
 
@@ -88,7 +90,7 @@ public class SongController implements ShuffleEngine{
         mav.setViewName("index");
 
         mav.addObject("presentSong",selectedSong);
-        mav.addObject("songs",presentSongsList);
+        mav.addObject("songs",presentSongsArray);
 
         return mav;
     }
@@ -99,9 +101,9 @@ public class SongController implements ShuffleEngine{
 
         selectedSongIndex=0;
 
-        setSongs(nextSongsList);
-        selectedSong=presentSongsList[selectedSongIndex];
-        attributes.addFlashAttribute("songs",presentSongsList);
+        setSongs(nextSongsArray);
+        selectedSong=presentSongsArray[selectedSongIndex];
+        attributes.addFlashAttribute("songs",presentSongsArray);
         return "redirect:/";
     }
 
@@ -109,7 +111,7 @@ public class SongController implements ShuffleEngine{
     //曲を指定するメソッド。再生中の曲を表示する処理は、index()メソッドに記述。
     @RequestMapping(path = "/play",method = RequestMethod.GET)
     String playSong(RedirectAttributes attributes){
-        selectedSong=presentSongsList[selectedSongIndex];
+        selectedSong=presentSongsArray[selectedSongIndex];
         return "redirect:/";
     }
 
@@ -123,40 +125,39 @@ public class SongController implements ShuffleEngine{
 
     //ランダム処理で選ばれる５個の曲を設定する
     public void setSongs(Song[] songs){
-        presentSongsList=songs;
+        presentSongsArray=songs;
 
         //現在の曲リストと次巡の曲リストが異なるように設定
         //曲が１つしかない場合は、次巡の曲に単にpeekQueue()を設定するだけ
-        if(storedSongs.size()!=1) {
+        if(storedSongs.size()!= 1) {
             do {
-                nextSongsList = peekQueue();
-            } while (Arrays.equals(presentSongsList,nextSongsList));
+                nextSongsArray = peekQueue();
+            } while (Arrays.equals(presentSongsArray,nextSongsArray));
         }
         else {
-            nextSongsList=peekQueue();
+            nextSongsArray=peekQueue();
         }
     }
-
 
 
     //次に再生する曲(Song)を返す。
     public Song getNextSong(){
 
         selectedSongIndex++;
-        selectedSongIndex= (int) (selectedSongIndex%min(storedSongs.size(),presentSongsList.length));
+        selectedSongIndex= (int) (selectedSongIndex%min(storedSongs.size(),presentSongsArray.length));
 
-        return presentSongsList[selectedSongIndex];
+        return presentSongsArray[selectedSongIndex];
     }
+
 
     //次に再生する予定の曲を先読み(PEEKMAXを上限)して配列として返す。
     public Song[]peekQueue(){
 
         Collections.shuffle(storedSongs);
 
-        //TODO storedSongsNum
         int num= (int) min(storedSongs.size(),PEEKMAX);
         Song[]queueArray=new Song[num];
-        for(int i=0;i<min(storedSongs.size(),PEEKMAX);i++){
+        for(int i=0;i<num;i++){
             queueArray[i]=storedSongs.get(i);
         }
 
@@ -208,7 +209,7 @@ public class SongController implements ShuffleEngine{
 
         //アップロード前に保存されたnextSongsListは、現在のアップロードの影響を受けないため、
         //nextSongsListを更新する必要がある。
-        nextSongsList=peekQueue();
+        nextSongsArray=peekQueue();
 
 
         return new ModelAndView("redirect:/");
