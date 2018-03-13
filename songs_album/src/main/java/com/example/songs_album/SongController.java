@@ -31,7 +31,7 @@ public class SongController implements ShuffleEngine{
     @Autowired
     SongRepository repository;
 
-    String storePath="/Users/nakamura/PracticeApp_nakamura/songs_album/target/classes/static/";
+    String storePath="/Users/meisei/Documents/abc_app/songs_album/target/classes/static/";
 
     //サーバーに保存されている曲全体
     ArrayList<Song>storedSongs=new ArrayList<>();
@@ -47,8 +47,8 @@ public class SongController implements ShuffleEngine{
     //次巡で表示される５つの曲の配列
     Song[] nextSongsArray=new Song[5];
 
-
-
+    Song presentLastSong;
+    Song nextFirstSong;
 
 
 
@@ -132,18 +132,22 @@ public class SongController implements ShuffleEngine{
     //ランダム処理で選ばれる５個の曲を設定する
     public void setSongs(Song[] songs){
         presentSongsArray=songs;
-        Song presentLastSong=presentSongsArray[presentSongsArray.length-1];
-        Song nextFirstSong;
+        presentLastSong=presentSongsArray[presentSongsArray.length-1];
 
         //現在の曲リストと次巡の曲リストが異なるように設定
         //曲が１つしかない場合は、次巡の曲に単にpeekQueue()を設定するだけ
-        if(storedSongs.size()>2) {
+        if(storedSongs.size()>=15){
+            storedSongs.removeAll(Arrays.asList(presentSongsArray));
+            nextSongsArray=peekQueue();
+            storedSongs.addAll(Arrays.asList(presentSongsArray));
+        }
+        else if(storedSongs.size()>=3) {
             do {
                 nextSongsArray = peekQueue();
                 nextFirstSong=nextSongsArray[0];
             } while (Arrays.equals(presentSongsArray,nextSongsArray)||presentLastSong==nextFirstSong);
         }
-        else if(storedSongs.size()>1){
+        else if(storedSongs.size()>=2){
             do {
                 nextSongsArray = peekQueue();
             } while (Arrays.equals(presentSongsArray,nextSongsArray));
@@ -152,7 +156,6 @@ public class SongController implements ShuffleEngine{
             nextSongsArray=peekQueue();
         }
     }
-
 
     //次に再生する曲(Song)を返す。
     public Song getNextSong(){
