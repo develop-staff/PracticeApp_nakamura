@@ -13,7 +13,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.annotation.PostConstruct;
 import javax.validation.Valid;
-import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -22,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
-import static java.lang.Float.intBitsToFloat;
 import static java.lang.Float.min;
 
 @Controller
@@ -48,9 +46,8 @@ public class SongController implements ShuffleEngine{
     Song[] nextSongsArray=new Song[5];
 
     Song presentLastSong;
-    Song nextFirstSong;
 
-
+    ArrayList<Song>presentSongsList=new ArrayList<>(Arrays.asList(presentSongsArray));
 
     @PostConstruct
     //ダミーデータ(10個)の作成
@@ -99,10 +96,6 @@ public class SongController implements ShuffleEngine{
         return mav;
     }
 
-    /**
-     * @param attributes
-     * @return
-     */
     @RequestMapping(path = "/shuffle",method = RequestMethod.GET)
     String shuffleSongs(RedirectAttributes attributes){
 
@@ -132,29 +125,7 @@ public class SongController implements ShuffleEngine{
     //ランダム処理で選ばれる５個の曲を設定する
     public void setSongs(Song[] songs){
         presentSongsArray=songs;
-        presentLastSong=presentSongsArray[presentSongsArray.length-1];
-
-        //現在の曲リストと次巡の曲リストが異なるように設定
-        //曲が１つしかない場合は、次巡の曲に単にpeekQueue()を設定するだけ
-        if(storedSongs.size()>=15){
-            storedSongs.removeAll(Arrays.asList(presentSongsArray));
-            nextSongsArray=peekQueue();
-            storedSongs.addAll(Arrays.asList(presentSongsArray));
-        }
-        else if(storedSongs.size()>=3) {
-            do {
-                nextSongsArray = peekQueue();
-                nextFirstSong=nextSongsArray[0];
-            } while (Arrays.equals(presentSongsArray,nextSongsArray)||presentLastSong==nextFirstSong);
-        }
-        else if(storedSongs.size()>=2){
-            do {
-                nextSongsArray = peekQueue();
-            } while (Arrays.equals(presentSongsArray,nextSongsArray));
-        }
-        else {
-            nextSongsArray=peekQueue();
-        }
+        nextSongsArray=peekQueue();
     }
 
     //次に再生する曲(Song)を返す。
@@ -167,21 +138,54 @@ public class SongController implements ShuffleEngine{
     }
 
 
-    //次に再生する予定の曲を先読み(PEEKMAXを上限)して配列として返す。
+    //TODO 次に再生する予定の曲を先読み(PEEKMAXを上限)して配列として返す。
     public Song[]peekQueue(){
 
-        Collections.shuffle(storedSongs);
-
-        int num= (int) min(storedSongs.size(),PEEKMAX);
-        Song[]queueArray=new Song[num];
-        for(int i=0;i<num;i++){
-            queueArray[i]=storedSongs.get(i);
+        if(storedSongs.size()>=15){
+            prepare();
         }
+
+        int num = (int) min(storedSongs.size(), PEEKMAX);
+        Song[] queueArray = new Song[num];
+        for (int i = 0; i < num; i++) {
+            queueArray[i] = storedSongs.get(i);
+        }
+
+        check(queueArray);
 
         return queueArray;
     }
 
+    void prepare(){
 
+        storedSongs.removeAll(Arrays.asList(presentSongsArray));
+
+        presentSongsList.clear();
+        for(int i=0;i<presentSongsArray.length;i++){
+            presentSongsList.add(presentSongsArray[i]);
+        }
+
+        Collections.shuffle(presentSongsList);
+        storedSongs.addAll(presentSongsList);
+        storedSongs.removeAll(Collections.singleton(null));
+
+    }
+
+    Song[]check(Song[] queueArray){
+
+        if(storedSongs.size()>=3){
+            do{
+                presentLastSong=presentSongsArray[presentSongsArray.length-1];
+                Collections.shuffle(Arrays.asList(queueArray));
+            }while (Arrays.equals(presentSongsArray,queueArray)||presentLastSong==queueArray[0]);
+        }
+        else if(storedSongs.size()>=2){
+            do{
+                Collections.shuffle(Arrays.asList(queueArray));
+            }while (Arrays.equals(presentSongsArray,queueArray));
+        }
+        return queueArray;
+    }
 
 
     //ファイルをアップロードするメソッド
