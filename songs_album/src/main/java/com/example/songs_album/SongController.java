@@ -150,7 +150,7 @@ public class SongController implements ShuffleEngine{
 
 
     /**
-     * 次に再生する曲を返す。現在選択中の曲が最後までいったら、次に選択する曲は「最初の曲」とする。
+     * 次に再生する曲を返す。現在選択中の曲が「最後の次」までいったら、次に選択する曲は「最初の曲」とする。
      * @return
      */
     public Song getNextSong(){
@@ -236,7 +236,7 @@ public class SongController implements ShuffleEngine{
     ModelAndView upload(@ModelAttribute @Valid Song mydata, BindingResult result, UploadForm uploadForm) {
 
         if (uploadForm.getFile().isEmpty()) {
-            return new ModelAndView("/");
+            return new ModelAndView("redirect:/");
         }
 
         Path path = Paths.get(storePath);
