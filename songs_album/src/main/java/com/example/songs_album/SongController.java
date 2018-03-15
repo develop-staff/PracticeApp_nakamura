@@ -49,8 +49,11 @@ public class SongController implements ShuffleEngine{
 
     ArrayList<Song>presentSongsList=new ArrayList<>(Arrays.asList(presentSongsArray));
 
+    /**
+     * target/classes/static 下のファイルを元にダミーデータを作成し、リポジトリに保存する
+     * また、storedSongsのインスタンスを生成し、以降このインスタンスを元にpresentSongsArray, nextSongsArrayの取得、アップロード等の処理を行う。
+     */
     @PostConstruct
-    //ダミーデータ(10個)の作成
     public void init(){
 
         ArrayList<String> storedSongNames=new ArrayList<>();
@@ -76,15 +79,14 @@ public class SongController implements ShuffleEngine{
         storedSongs=new ArrayList<>(repository.findAll());
         setSongs(peekQueue());
 
-        //シャッフルメソッドでも以下の処理をする
         selectedSong=presentSongsArray[selectedSongIndex];
     }
 
 
     /**
-     *
+     * 現在選択中の曲と現在の曲配列をthymeleafに埋め込んで表示する
      * @param mav
-     * @return
+     * @return "/redirect:/"
      */
     @RequestMapping(path = "/",method = RequestMethod.GET)
     ModelAndView index(ModelAndView mav){
@@ -96,24 +98,39 @@ public class SongController implements ShuffleEngine{
         return mav;
     }
 
+    /**
+     * setSongs()を呼び出してpresentSongsArray, nextSongsArrayを更新する。
+     * また、「選択中の曲」を曲配列の０番目に指定する。
+     * @param attributes
+     * @return "redirect:/"
+     */
     @RequestMapping(path = "/shuffle",method = RequestMethod.GET)
     String shuffleSongs(RedirectAttributes attributes){
 
         selectedSongIndex=0;
 
         setSongs(nextSongsArray);
-        selectedSong=presentSongsArray[selectedSongIndex];  //現在の曲配列の０番目を指定
+        selectedSong=presentSongsArray[selectedSongIndex];
         return "redirect:/";
     }
 
 
-    //曲を指定するメソッド。再生中の曲を表示する処理は、index()メソッドに記述。
+    /**
+     * 現在選択されている曲を指定する。
+     * @param attributes
+     * @return "redirect:/"
+     */
     @RequestMapping(path = "/play",method = RequestMethod.GET)
     String playSong(RedirectAttributes attributes){
         selectedSong=presentSongsArray[selectedSongIndex];
         return "redirect:/";
     }
 
+    /**
+     * 現在選択中の曲を、次の曲に更新する。
+     * @param attributes
+     * @return "redirect:/"
+     */
     @RequestMapping(path = "/play/next",method = RequestMethod.GET)
     String playNextSong(RedirectAttributes attributes){
         selectedSong=getNextSong();
@@ -122,13 +139,20 @@ public class SongController implements ShuffleEngine{
     }
 
 
-    //ランダム処理で選ばれる５個の曲を設定する
+    /**
+     * presentSongsArray, nextSongsArrayを更新する。
+     * @param songs
+     */
     public void setSongs(Song[] songs){
         presentSongsArray=songs;
         nextSongsArray=peekQueue();
     }
 
-    //次に再生する曲(Song)を返す。
+
+    /**
+     * 次に再生する曲を返す。現在選択中の曲が最後までいったら、次に選択する曲は「最初の曲」とする。
+     * @return
+     */
     public Song getNextSong(){
 
         selectedSongIndex++;
@@ -138,12 +162,13 @@ public class SongController implements ShuffleEngine{
     }
 
 
-    //TODO 次に再生する予定の曲を先読み(PEEKMAXを上限)して配列として返す。
+    /**
+     *
+     * @return
+     */
     public Song[]peekQueue(){
 
-        if(storedSongs.size()>=15){
-            prepare();
-        }
+        prioritizeNotPresentSongs();
 
         int num = (int) min(storedSongs.size(), PEEKMAX);
         Song[] queueArray = new Song[num];
@@ -151,12 +176,16 @@ public class SongController implements ShuffleEngine{
             queueArray[i] = storedSongs.get(i);
         }
 
-        check(queueArray);
+        getShuffledArray(queueArray);
 
         return queueArray;
     }
 
-    void prepare(){
+
+    /**
+     * presentSongsArrayに含まれない曲が優先的に、storeSongsリストの先頭にくる様にする
+     */
+    void prioritizeNotPresentSongs(){
 
         storedSongs.removeAll(Arrays.asList(presentSongsArray));
 
@@ -168,10 +197,16 @@ public class SongController implements ShuffleEngine{
         Collections.shuffle(presentSongsList);
         storedSongs.addAll(presentSongsList);
         storedSongs.removeAll(Collections.singleton(null));
-
     }
 
-    Song[]check(Song[] queueArray){
+
+    /**
+     * presentSongsArrayと同一でない配列を得る。
+     * また、可能な限り「現在の最後の曲」と「得られる配列の最初の曲」が一致しない配列を得る。
+     * @param queueArray
+     * @return
+     */
+    Song[]getShuffledArray(Song[] queueArray){
 
         if(storedSongs.size()>=3){
             do{
@@ -188,7 +223,14 @@ public class SongController implements ShuffleEngine{
     }
 
 
-    //ファイルをアップロードするメソッド
+    /**
+     * ファイルをアップロードし、指定パスに格納する。
+     * この際、パスと名前をリポジトリ、storedSongsに追加する。
+     * @param mydata
+     * @param result
+     * @param uploadForm
+     * @return
+     */
     @RequestMapping(path = "/upload", method = RequestMethod.POST)
     @Transactional(readOnly = false)
     ModelAndView upload(@ModelAttribute @Valid Song mydata, BindingResult result, UploadForm uploadForm) {
