@@ -140,6 +140,7 @@ public class SongController implements ShuffleEngine{
     String shuffleSongs(@RequestParam(value = "designateGenre",required = false)int designateGenreIndex){
 
         selectedSongIndex=0;
+        this.designateGenreIndex=designateGenreIndex;
 
         setSongs(nextSongsArray[designateGenreIndex]);  //TODO
         selectedSong=presentSongsArray[selectedSongIndex];
@@ -199,11 +200,16 @@ public class SongController implements ShuffleEngine{
      * @return 先読みをしてシャッフルされた曲の配列
      */
     public Song[]peekQueue(){
-
+// TODO 以下のコードは効果なし
+//        ArrayList<Song>list=new ArrayList(Arrays.asList(Genre.rock));
+//
 //        switch (designateGenreIndex){
 //            case 0:
-//                storedSongs.removeAll(Collections.singleton(Genre.rock));
-//                storedSongs.removeAll(Collections.singleton(Genre.fork));
+//                storedSongs.removeAll(list);
+//                storedSongs.removeAll(Arrays.asList(Genre.rock));
+//                storedSongs.removeAll(Arrays.asList(Genre.fork));
+//                storedSongs.remove(Genre.rock);
+//                storedSongs.remove(Genre.rock);
 //                break;
 //            case 1:
 //                storedSongs.removeAll((Collections.singleton(Genre.classic)));
@@ -215,9 +221,10 @@ public class SongController implements ShuffleEngine{
 //                break;
 //            case 3:
 //                break;
-//             default:
-//                 break;
+//            default:
+//                break;
 //        }
+
 
 
         prioritizeNotPresentSongs();
@@ -229,6 +236,9 @@ public class SongController implements ShuffleEngine{
         }
 
         getShuffledArray(queueArray[designateGenreIndex]);
+
+
+
 
 
         //TODO 元に戻す際に、どうしようか。
@@ -261,7 +271,7 @@ public class SongController implements ShuffleEngine{
      */
     private void prioritizeNotPresentSongs(){
 
-        storedSongs.removeAll(Arrays.asList(presentSongsArray));
+        //storedSongs.removeAll(Arrays.asList(presentSongsArray)); TODO
 
         presentSongsList.clear();
         for(int i=0;i<presentSongsArray.length;i++){
@@ -269,7 +279,7 @@ public class SongController implements ShuffleEngine{
         }
 
         Collections.shuffle(presentSongsList);
-        storedSongs.addAll(presentSongsList);
+        //storedSongs.addAll(presentSongsList);  //TODO
         storedSongs.removeAll(Collections.singleton(null));
     }
 
