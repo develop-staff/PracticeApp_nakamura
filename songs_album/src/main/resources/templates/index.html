@@ -24,6 +24,12 @@
     <form method="post" enctype="multipart/form-data" action="/upload" >
         <input name="file" type="file" />
         <input type="submit" value="アップロードする"/>
+
+        <select id="selectedGenre" name="selectedGenre" size="4">
+            <option value=0 selected>classic</option>
+            <option value=1>rock</option>
+            <option value=2>fork</option>
+        </select>
     </form>
 </div>
 
@@ -41,12 +47,20 @@
     <div class="shuffle-button">
         <form method="get" action="http://localhost:8080/shuffle">
             <button>曲を更新してシャッフルする</button>
+
+            <select id="designateGenre" name="designateGenre" size="4">
+                <option value=4 selected>特に指定しない</option>
+                <option value=0>classic</option>
+                <option value=1>rock</option>
+                <option value=2>fork</option>
+            </select>
         </form>
     </div>
     <div class="songs-list">
         <table>
             <tr th:each="obj:${songs}">
                 <td th:text="${obj.file_name}"></td>
+                <td th:text="${obj.genre}"></td>
             </tr>
         </table>
     </div>

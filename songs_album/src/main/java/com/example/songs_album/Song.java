@@ -12,12 +12,22 @@ public class Song {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
 
-    @Column(nullable = true)
+    @Column(nullable = false)
     private String file_name;
 
-    @Column(nullable = true)
+    @Column(nullable = false)
     private String file_path;
 
+    @Column(nullable = false)
+    private Enum genre;
+
+    public Enum getGenre() {
+        return genre;
+    }
+
+    public void setGenre(Enum genre) {
+        this.genre = genre;
+    }
 
     public long getId() {
         return id;
