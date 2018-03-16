@@ -45,11 +45,11 @@
         </form>
     </div>
     <div class="shuffle-button">
-        <form method="get" action="http://localhost:8080/shuffle">
+        <form method="post" action="http://localhost:8080/shuffle">
             <button>曲を更新してシャッフルする</button>
 
             <select id="designateGenre" name="designateGenre" size="4">
-                <option value=4 selected>特に指定しない</option>
+                <option value=3 selected>特に指定しない</option>
                 <option value=0>classic</option>
                 <option value=1>rock</option>
                 <option value=2>fork</option>

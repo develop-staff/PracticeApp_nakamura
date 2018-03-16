@@ -22,6 +22,7 @@ import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Optional;
 
 import static java.lang.Float.min;
 
@@ -47,7 +48,9 @@ public class SongController implements ShuffleEngine{
     //現在表示される５つの曲の配列
     private Song[] presentSongsArray=new Song[5];
     //次巡で表示される５つの曲の配列
-    private Song[] nextSongsArray=new Song[5];
+    private Song[][] nextSongsArray=new Song[4][5];
+
+    int designateGenreIndex=3;
 
     private Song presentLastSong;
 
@@ -105,6 +108,9 @@ public class SongController implements ShuffleEngine{
 
         storedSongs=new ArrayList<>(repository.findAll());
         setSongs(peekQueue());
+        for (designateGenreIndex=0;designateGenreIndex<3;designateGenreIndex++){
+            setSongs(peekQueue());
+        }
 
         selectedSong=presentSongsArray[selectedSongIndex];
     }
@@ -130,15 +136,17 @@ public class SongController implements ShuffleEngine{
      * また、「選択中の曲」を曲配列の０番目に指定する。
      * @return "redirect:/"
      */
-    @RequestMapping(path = "/shuffle",method = RequestMethod.GET)
-    String shuffleSongs(){
+    @RequestMapping(path = "/shuffle",method = RequestMethod.POST)
+    String shuffleSongs(@RequestParam(value = "designateGenre",required = false)int designateGenreIndex){
 
         selectedSongIndex=0;
 
-        setSongs(nextSongsArray);
+        setSongs(nextSongsArray[designateGenreIndex]);  //TODO
         selectedSong=presentSongsArray[selectedSongIndex];
         return "redirect:/";
     }
+
+
 
 
     /**
@@ -169,7 +177,7 @@ public class SongController implements ShuffleEngine{
      */
     public void setSongs(Song[] songs){
         presentSongsArray=songs;
-        nextSongsArray=peekQueue();
+        nextSongsArray[designateGenreIndex]=peekQueue();  //TODO
     }
 
 
@@ -192,18 +200,60 @@ public class SongController implements ShuffleEngine{
      */
     public Song[]peekQueue(){
 
+//        switch (designateGenreIndex){
+//            case 0:
+//                storedSongs.removeAll(Collections.singleton(Genre.rock));
+//                storedSongs.removeAll(Collections.singleton(Genre.fork));
+//                break;
+//            case 1:
+//                storedSongs.removeAll((Collections.singleton(Genre.classic)));
+//                storedSongs.removeAll(Collections.singleton(Genre.fork));
+//                break;
+//            case 2:
+//                storedSongs.removeAll((Collections.singleton(Genre.classic)));
+//                storedSongs.removeAll(Collections.singleton(Genre.rock));
+//                break;
+//            case 3:
+//                break;
+//             default:
+//                 break;
+//        }
+
+
         prioritizeNotPresentSongs();
 
         int num = (int) min(storedSongs.size(), PEEKMAX);
-        Song[] queueArray = new Song[num];
+        Song[][] queueArray = new Song[4][num];
         for (int i = 0; i < num; i++) {
-            queueArray[i] = storedSongs.get(i);
+            queueArray[designateGenreIndex][i] = storedSongs.get(i);
         }
 
-        getShuffledArray(queueArray);
+        getShuffledArray(queueArray[designateGenreIndex]);
 
-        return queueArray;
+
+        //TODO 元に戻す際に、どうしようか。
+//        switch (designateGenreIndex){
+//            case 0:
+//                storedSongs.addAll(new ArrayList(Collections.singleton(Genre.rock)));
+//                storedSongs.removeAll(new ArrayList(Collections.singleton(Genre.fork)));
+//                break;
+//            case 1:
+//                storedSongs.removeAll(new ArrayList(Collections.singleton(Genre.classic)));
+//                storedSongs.removeAll(new ArrayList(Collections.singleton(Genre.fork)));
+//                break;
+//            case 2:
+//                storedSongs.removeAll(new ArrayList(Collections.singleton(Genre.classic)));
+//                storedSongs.removeAll(new ArrayList(Collections.singleton(Genre.rock)));
+//                break;
+//            case 3:
+//                break;
+//            default:
+//                break;
+//        }
+
+        return queueArray[designateGenreIndex];
     }
+
 
 
     /**
@@ -311,7 +361,7 @@ public class SongController implements ShuffleEngine{
 
         //アップロード前に保存されたnextSongsListは、現在のアップロードの影響を受けないため、
         //nextSongsListを更新する必要がある。
-        nextSongsArray=peekQueue();
+        nextSongsArray[designateGenreIndex]=peekQueue(); //TODO
 
 
         return new ModelAndView("redirect:/");
