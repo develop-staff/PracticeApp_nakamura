@@ -139,8 +139,8 @@ public class SongController implements ShuffleEngine{
      * @return "redirect:/"
      */
 
-    @RequestMapping(path = "/shuffle",method = RequestMethod.GET)
-    String shuffleSongs(){
+    @RequestMapping(path = "/shuffle",method = RequestMethod.POST)
+    String shuffleSongs(@RequestParam(value = "designateGenre",required = false)int designateGenreIndex){
 
         selectedSongIndex=0;
         this.designateGenreIndex=designateGenreIndex;
