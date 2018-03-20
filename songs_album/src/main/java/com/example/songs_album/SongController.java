@@ -66,6 +66,7 @@ public class SongController implements ShuffleEngine{
         File file[]=new File[storedSongsNum];
         Song song[]=new Song[storedSongsNum];
 
+        //指定ファイルに格納されている音楽ファイルを一つずつ、名前とパスをDBに格納するために繰り返しを行う
         for(int i=0;i<storedFiles.length;i++){
             storedSongNames.add(new File(storePath+storedFiles[i]).getName());
 
@@ -137,7 +138,7 @@ public class SongController implements ShuffleEngine{
 
 
     /**
-     * presentSongsArray, nextSongsArrayを更新する。
+     * 今巡の曲配列、次巡の曲配列を更新する。
      * @param songs presentSongsArrayに設定する配列
      */
     public void setSongs(Song[] songs){
@@ -153,6 +154,7 @@ public class SongController implements ShuffleEngine{
     public Song getNextSong(){
 
         selectedSongIndex++;
+        //「次を再生」が最後までいったら、一巡するようにする
         selectedSongIndex= (int) (selectedSongIndex%min(storedSongs.size(),presentSongsArray.length));
 
         return presentSongsArray[selectedSongIndex];
@@ -164,28 +166,26 @@ public class SongController implements ShuffleEngine{
      */
     public Song[]peekQueue(){
 
-        prioritizeNotPresentSongs();
-
         int num = (int) min(storedSongs.size(), PEEKMAX);
         Song[] queueArray = new Song[num];
-        for (int i = 0; i < num; i++) {
-            queueArray[i] = storedSongs.get(i);
-        }
 
-        getShuffledArray(queueArray);
+        queueArray=getPrioritizeNotPresentSongs(queueArray,num);
+        queueArray=getShuffledArray(queueArray);
 
         return queueArray;
     }
 
 
     /**
-     * presentSongsArrayに含まれない曲が優先的に、storeSongsリストの先頭にくる様にする
+     * 今巡の配列に含まれない曲が優先的に取得する
+     * @return 今巡の曲をなるべく含まない曲配列
      */
-    private void prioritizeNotPresentSongs(){
+    private Song[] getPrioritizeNotPresentSongs(Song[]queueArray,int num){
 
         storedSongs.removeAll(Arrays.asList(presentSongsArray));
 
         presentSongsList.clear();
+        //presentSongsArrayに影響を与えずにシャッフル処理をするために、「今巡の曲配列」の要素を「リスト」の中に移す
         for(int i=0;i<presentSongsArray.length;i++){
             presentSongsList.add(presentSongsArray[i]);
         }
@@ -193,6 +193,13 @@ public class SongController implements ShuffleEngine{
         Collections.shuffle(presentSongsList);
         storedSongs.addAll(presentSongsList);
         storedSongs.removeAll(Collections.singleton(null));
+
+        //最初の５つの曲をqueueArrayに含めることで、「可能な限り今巡とは違う曲」を得る
+        for (int i = 0; i < num; i++) {
+            queueArray[i] = storedSongs.get(i);
+        }
+
+        return queueArray;
     }
 
 
@@ -205,12 +212,16 @@ public class SongController implements ShuffleEngine{
     private Song[]getShuffledArray(Song[] queueArray){
 
         if(storedSongs.size()>=3){
+            //最初の曲が、「今巡の最後」と異なる配列を得る、かつ「今巡の配列」と異なる配列を得るまで繰り返す
             do{
                 presentLastSong=presentSongsArray[presentSongsArray.length-1];
                 Collections.shuffle(Arrays.asList(queueArray));
             }while (Arrays.equals(presentSongsArray,queueArray)||presentLastSong==queueArray[0]);
         }
+        // 曲数が２個の時には、「今巡と異なる配列を得る」という条件下では「今巡の最後 != 次巡の最初」となり得ない
+        // ので、処理を分ける必要がある。
         else if(storedSongs.size()>=2){
+            //「今巡の配列」と異なる配列を得るまで繰り返す
             do{
                 Collections.shuffle(Arrays.asList(queueArray));
             }while (Arrays.equals(presentSongsArray,queueArray));
@@ -250,6 +261,7 @@ public class SongController implements ShuffleEngine{
                 .get(storePath+filename);
 
 
+        //ディレクトリにファイルを書き込む
         try (OutputStream os = Files.newOutputStream(uploadfile, StandardOpenOption.CREATE)) {
             byte[] bytes = uploadForm.getFile().getBytes();
 
