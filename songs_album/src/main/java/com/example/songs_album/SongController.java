@@ -29,7 +29,7 @@ public class SongController implements ShuffleEngine{
     @Autowired
     SongRepository repository;
 
-    private String storePath="/Users/meisei/Documents/abc_app/songs_album/target/classes/static/";
+    private String storePath="/Users/nakamura/PracticeApp/songs_album/target/classes/static/";
 
     //サーバーに保存されている曲全体
     private ArrayList<Song>storedSongs=new ArrayList<>();

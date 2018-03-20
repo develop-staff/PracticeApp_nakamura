@@ -31,15 +31,15 @@
     <p th:text="|現在再生中の曲: ${presentSong.file_name}|"></p>
 
     <div class="play-button">
-        <form method="get" action="http://localhost:8080/play">
+        <form method="get" action="/play">
             <button>現在の曲を再生する</button>
         </form>
-        <form method="get" action="http://localhost:8080/play/next">
+        <form method="get" action="/play/next">
             <button>次の曲を再生する</button>
         </form>
     </div>
     <div class="shuffle-button">
-        <form method="get" action="http://localhost:8080/shuffle">
+        <form method="get" action="/shuffle">
             <button>曲を更新してシャッフルする</button>
         </form>
     </div>
