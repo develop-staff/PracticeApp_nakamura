@@ -34,7 +34,7 @@ public class SongController implements ShuffleEngine{
     @Autowired
     SongRepository repository;
 
-    private String storePath="/Users/nakamura/PracticeApp_nakamura/songs_album/target/classes/static/";
+    private String storePath="/Users/meisei/Documents/abc_app/songs_album/target/classes/static/";
 
     //サーバーに保存されている曲全体
     private ArrayList<Song>storedSongs=new ArrayList<>();
@@ -48,6 +48,7 @@ public class SongController implements ShuffleEngine{
     //現在表示される５つの曲の配列
     private Song[] presentSongsArray=new Song[5];
     //次巡で表示される５つの曲の配列
+
     private Song[][] nextSongsArray=new Song[4][5];
 
     int designateGenreIndex=3;
@@ -57,6 +58,7 @@ public class SongController implements ShuffleEngine{
     protected enum Genre{
         classic,rock,fork
     }
+
 
     private ArrayList<Song>presentSongsList=new ArrayList<>(Arrays.asList(presentSongsArray));
 
@@ -118,7 +120,7 @@ public class SongController implements ShuffleEngine{
 
     /**
      * 現在選択中の曲と現在の曲配列をthymeleafに埋め込んで表示する
-     * @param mav 他のメソッドで更新した変数とthymeleafの橋渡し
+     * @param mav 他のメソッドで更新した値と、thymeleafを橋渡しする
      * @return "/redirect:/"
      */
     @RequestMapping(path = "/",method = RequestMethod.GET)
@@ -136,8 +138,9 @@ public class SongController implements ShuffleEngine{
      * また、「選択中の曲」を曲配列の０番目に指定する。
      * @return "redirect:/"
      */
-    @RequestMapping(path = "/shuffle",method = RequestMethod.POST)
-    String shuffleSongs(@RequestParam(value = "designateGenre",required = false)int designateGenreIndex){
+
+    @RequestMapping(path = "/shuffle",method = RequestMethod.GET)
+    String shuffleSongs(){
 
         selectedSongIndex=0;
         this.designateGenreIndex=designateGenreIndex;
@@ -194,10 +197,8 @@ public class SongController implements ShuffleEngine{
         return presentSongsArray[selectedSongIndex];
     }
 
-
     /**
-     *
-     * @return 先読みをしてシャッフルされた曲の配列
+     * @return 先読みして得られる、シャッフルされた曲の配列
      */
     public Song[]peekQueue(){
 // TODO 以下のコードは効果なし
